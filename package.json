@@ -1,18 +1,34 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-crm",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "An Obsidian plugin for CRM functionality including meeting summaries using LLM integration",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"obsidian",
+		"crm",
+		"meetings",
+		"llm",
+		"ai"
+	],
+	"author": "Your Name <your.email@example.com>",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yourusername/obsidian-crm.git"
+	},
+	"bugs": {
+		"url": "https://github.com/yourusername/obsidian-crm/issues"
+	},
+	"homepage": "https://github.com/yourusername/obsidian-crm#readme",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
+		"@types/react": "^19.1.12",
+		"@types/react-dom": "^19.1.9",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
@@ -20,5 +36,10 @@
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
+	},
+	"dependencies": {
+		"@blacksmithgu/datacore": "^0.1.24",
+		"react": "^19.1.1",
+		"react-dom": "^19.1.1"
 	}
 }
