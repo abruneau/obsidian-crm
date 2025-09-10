@@ -314,7 +314,6 @@ export function OrgChartComponent({
 						performanceMonitor.current.endCheckpoint(
 							"mermaid-generation"
 						);
-					console.log("OrgChart: Generated Mermaid code:", code);
 
 					// Only update if the code has actually changed
 					setMermaidCode((prevCode) => {
@@ -357,24 +356,15 @@ export function OrgChartComponent({
 
 	// Render SVG when Mermaid code changes
 	useEffect(() => {
-		console.log("OrgChart: useEffect triggered for mermaid code change", {
-			mermaidCodeLength: mermaidCode.length,
-			hasMermaidCode: !!mermaidCode,
-		});
 
 		let cancelled = false;
 
 		const renderSvg = async () => {
 			if (!mermaidCode) {
-				console.log("OrgChart: No mermaid code, clearing SVG");
 				setSvg("");
 				return;
 			}
 
-			console.log(
-				"OrgChart: Starting SVG rendering for mermaid code:",
-				mermaidCode.substring(0, 100) + "..."
-			);
 			performanceMonitor.current.startCheckpoint("svg-rendering");
 			setIsRendering(true);
 
@@ -392,12 +382,6 @@ export function OrgChartComponent({
 						"OrgChart: SVG rendered successfully, length:",
 						renderedSvg.length
 					);
-
-					// Modify SVG to add width and height attributes
-					// const modifiedSvg = renderedSvg.replace(
-					// 	/<svg([^>]*)>/,
-					// 	'<svg$1 width="100%" height="100%">'
-					// );
 
 					// Only update if the SVG has actually changed
 					setSvg((prevSvg) => {
@@ -448,112 +432,7 @@ export function OrgChartComponent({
 
 	// centerView function removed - no longer needed
 
-	// Auto-center when SVG is rendered and smaller than container
-	useEffect(() => {
-		if (svg && viewerRef.current) {
-			const centerSvg = () => {
-				const viewer = viewerRef.current;
-				if (!viewer) return;
-
-				const svgElement = viewer.querySelector(
-					"svg"
-				) as SVGSVGElement | null;
-				if (!svgElement) return;
-
-				const viewerRect = viewer.getBoundingClientRect();
-
-				// Get SVG dimensions
-				let svgWidth = parseFloat(
-					svgElement.getAttribute("width") || "0"
-				);
-				let svgHeight = parseFloat(
-					svgElement.getAttribute("height") || "0"
-				);
-
-				if (
-					!svgWidth ||
-					!svgHeight ||
-					svgWidth === 0 ||
-					svgHeight === 0
-				) {
-					const bbox = svgElement.getBBox();
-					if (bbox.width && bbox.height) {
-						svgWidth = bbox.width;
-						svgHeight = bbox.height;
-					} else {
-						svgWidth = svgElement.clientWidth;
-						svgHeight = svgElement.clientHeight;
-					}
-				}
-
-				if (svgWidth && svgHeight) {
-					// Always use (0, 0) as the centered position for both small and large diagrams
-					setTransform((prev) => ({
-						...prev,
-						x: 0,
-						y: 0,
-					}));
-					console.log("OrgChart: Positioned SVG at origin (0, 0)", {
-						svgDimensions: { width: svgWidth, height: svgHeight },
-						viewerDimensions: {
-							width: viewerRect.width,
-							height: viewerRect.height,
-						},
-						centerPosition: { x: 0, y: 0 },
-					});
-				}
-			};
-
-			// Try to center immediately
-			centerSvg();
-
-			// If SVG dimensions are not available yet, use MutationObserver to wait for it
-			const observer = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => {
-					if (
-						mutation.type === "childList" ||
-						mutation.type === "attributes"
-					) {
-						const svgElement = viewerRef.current?.querySelector(
-							"svg"
-						) as SVGSVGElement | null;
-						if (svgElement) {
-							const width = parseFloat(
-								svgElement.getAttribute("width") || "0"
-							);
-							const height = parseFloat(
-								svgElement.getAttribute("height") || "0"
-							);
-
-							// If we have valid dimensions, center and stop observing
-							if (width > 0 && height > 0) {
-								centerSvg();
-								observer.disconnect();
-							}
-						}
-					}
-				});
-			});
-
-			// Start observing the viewer for changes
-			observer.observe(viewerRef.current, {
-				childList: true,
-				subtree: true,
-				attributes: true,
-				attributeFilter: ["width", "height"],
-			});
-
-			// Fallback: disconnect after 2 seconds to avoid memory leaks
-			const fallbackTimer = setTimeout(() => {
-				observer.disconnect();
-			}, 2000);
-
-			return () => {
-				observer.disconnect();
-				clearTimeout(fallbackTimer);
-			};
-		}
-	}, [svg]);
+	// SVG is now automatically centered by flexbox - no complex centering logic needed
 
 	// Wheel event handling with performance optimization
 	useEffect(() => {
