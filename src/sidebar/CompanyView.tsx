@@ -1,5 +1,5 @@
 import { MarkdownPage } from "@blacksmithgu/datacore";
-import MeetingSummaryComponent from "src/component/MeetingSummaryComponent";
+import MeetingSummaryComponent from "src/component/ui/MeetingSummaryComponent";
 import { DatacoreService } from "src/lib/DatacoreService";
 
 interface CompanyViewProps {

@@ -10,6 +10,8 @@ A comprehensive Customer Relationship Management (CRM) plugin for Obsidian that 
 - **Datacore Integration**: Seamlessly integrates with the Datacore plugin for advanced data querying and management
 - **Side Panel Interface**: Clean, intuitive interface accessible via ribbon icon or command palette
 - **Flexible LLM Support**: Works with Ollama (local), OpenAI, and other OpenAI-compatible APIs
+- **Folder Structure Scaffolding**: One-click creation of standardized CRM folder organization
+- **Template File Creation**: Pre-built templates for Contacts, Companies, Meetings, and Opportunities
 
 ## 📋 Requirements
 
@@ -37,7 +39,64 @@ A comprehensive Customer Relationship Management (CRM) plugin for Obsidian that 
 
 **CRITICAL**: This plugin requires the [Datacore plugin](https://github.com/blacksmithgu/datacore) to function properly.
 
-### 2. Configure LLM Settings
+### 2. Set Up CRM Folder Structure
+
+The plugin includes a convenient folder scaffolding feature to help you organize your CRM data:
+
+1. **Access Settings**: Go to **Settings** → **Community Plugins** → **Obsidian CRM**
+2. **Choose Scaffolding Option**:
+   - **"Create Folders Only"**: Creates just the folder structure
+   - **"Create Folders + Templates"**: Creates folders and template files
+3. **Folder Structure**: This creates the following organization:
+   ```
+   CRM/
+   ├── Companies/     # Company information and profiles
+   ├── Contacts/      # Contact details and relationships
+   ├── Interactions/  # Meeting notes and communications
+   └── Opportunities/ # Sales opportunities and deals
+   
+   Settings/
+   ├── Scripts/       # Custom automation scripts
+   └── Templates/     # Pre-built template files
+       ├── Contact Template.md
+       ├── Company Template.md
+       ├── Meeting Template.md
+       └── Opportunity Template.md
+   ```
+
+**Note**: The scaffolding is non-destructive - it only creates folders and files that don't already exist.
+
+### 3. Using CRM Templates
+
+The plugin creates pre-built templates to help you get started:
+
+#### **Contact Template**
+- Includes fields for company, team, role, email, phone, LinkedIn, manager, and location
+- Automatically moves new contacts to the `CRM/Contacts/` folder
+- Includes Datacore integration for contact information display
+
+#### **Company Template**
+- Fields for industry, size, website, address, phone, founded date, and description
+- Sections for key contacts, opportunities, and notes
+- Automatically moves to the `CRM/Companies/` folder
+
+#### **Meeting Template**
+- Pre-configured with meeting details, attendees, agenda, and action items
+- Includes start_date field for proper Datacore integration
+- Automatically moves to the `CRM/Interactions/` folder
+
+#### **Opportunity Template**
+- Tracks opportunity details, value, probability, and close date
+- Includes sections for requirements, competition, and next steps
+- Automatically moves to the `CRM/Opportunities/` folder
+
+**Template Features**:
+- **Templater Integration**: Uses Templater syntax for dynamic content
+- **Auto-move**: Templates automatically move files to appropriate CRM folders
+- **Datacore Ready**: Includes proper frontmatter and tags for Datacore integration
+- **Customizable**: Edit templates to match your specific workflow needs
+
+### 4. Configure LLM Settings
 
 Access the plugin settings through: **Settings** → **Community Plugins** → **Obsidian CRM**
 
@@ -185,17 +244,27 @@ obsidian-crm/
 │   ├── lib/              # Core services
 │   │   ├── DatacoreService.ts
 │   │   ├── TaskService.ts
+│   │   ├── TemplateService.ts
+│   │   ├── FolderScaffoldService.ts
 │   │   └── AppContext.ts
 │   ├── model/            # Data models and utilities
 │   │   ├── ContentManager.ts
 │   │   └── types.ts
 │   ├── settings/         # Settings management
 │   │   └── SettingsTab.ts
-│   └── sidebar/          # Sidebar views
-│       ├── CRMSideBarView.tsx
-│       ├── MeetingView.tsx
-│       ├── ContactView.tsx
-│       └── CompanyView.tsx
+│   ├── sidebar/          # Sidebar views
+│   │   ├── CRMSideBarView.tsx
+│   │   ├── MeetingView.tsx
+│   │   ├── ContactView.tsx
+│   │   └── CompanyView.tsx
+│   └── templates/        # Template files and configuration
+│       ├── README.md
+│       ├── templateConfig.ts
+│       ├── TemplateLoader.ts
+│       ├── ContactTemplate.md.ts
+│       ├── CompanyTemplate.md.ts
+│       ├── MeetingTemplate.md.ts
+│       └── OpportunityTemplate.md.ts
 ├── styles.css            # Plugin styles
 └── package.json          # Dependencies and scripts
 ```

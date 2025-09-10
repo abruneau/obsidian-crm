@@ -1,14 +1,14 @@
-export interface ObsidianCRMSettings {
-	llmUrl: string;
-	llmModel: string;
-	systemPrompt: string;
-}
+// export interface ObsidianCRMSettings {
+// 	llmUrl: string;
+// 	llmModel: string;
+// 	systemPrompt: string;
+// }
 
-export interface LLMConfig {
-	llmUrl: string;
-	llmModel: string;
-	systemPrompt: string;
-}
+// export interface LLMConfig {
+// 	llmUrl: string;
+// 	llmModel: string;
+// 	systemPrompt: string;
+// }
 
 export interface ContentType {
 	type: string;
@@ -16,7 +16,7 @@ export interface ContentType {
 	description: string;
 }
 
-export interface ObsidianCRMPlugin {
-	settings: ObsidianCRMSettings;
-	saveSettings(): Promise<void>;
-}
+// export interface ObsidianCRMPlugin {
+// 	settings: ObsidianCRMSettings;
+// 	saveSettings(): Promise<void>;
+// }

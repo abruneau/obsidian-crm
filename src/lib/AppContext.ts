@@ -1,5 +1,5 @@
-import {App, TFile} from "obsidian";
-import {createContext, useContext} from "react";
+import { App, TFile } from "obsidian";
+import { createContext, useContext } from "react";
 import ObsidianCRMPlugin from "../../main";
 
 interface AppContextType {
@@ -23,3 +23,4 @@ export function useActiveFile(): TFile | null {
 	const { activeFile } = useApp();
 	return activeFile;
 }
+

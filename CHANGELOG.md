@@ -22,6 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Meeting history filtering and sorting
 - Error handling and user feedback
 - Comprehensive documentation and README
+- **Folder Structure Scaffolding**: One-click creation of standardized CRM folder organization
+- **Non-destructive folder creation**: Only creates folders that don't already exist
+- **Folder status monitoring**: Shows which folders are present or missing
+- **Enhanced settings interface**: Improved settings tab with CRM setup section
+- **Template File Creation**: Pre-built templates for Contacts, Companies, Meetings, and Opportunities
+- **Templater Integration**: Templates use Templater syntax for dynamic content and auto-move functionality
+- **Template Management**: Separate template creation and management in settings
+- **Comprehensive Template Library**: Four complete templates with proper frontmatter and Datacore integration
+- **Modular Template Structure**: Templates organized in separate files for better maintainability
+- **Template Configuration System**: Centralized configuration for template metadata and settings
+- **Easy Template Extension**: Simple process for adding new templates to the system
+- **File-based Template Loading**: Templates loaded through TemplateLoader with caching and fallback support
+- **Clean Architecture**: Removed duplicate template content from TemplateService for better maintainability
+- **Template Loading Fix**: Resolved issue where plugin always used fallback templates instead of actual template files
+- **TypeScript Template Integration**: Templates now properly load from `.md.ts` files as exported constants
 
 ### Features
 - **Meeting Summaries**: Generate AI-powered summaries of meeting notes
@@ -31,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flexible LLM Support**: Works with local and cloud-based LLM services
 - **Clean UI**: Intuitive side panel interface
 - **Real-time Updates**: Immediate synchronization of task changes
+- **Folder Scaffolding**: One-click creation of organized CRM folder structure
+- **Smart Organization**: Standardized folder layout for Companies, Contacts, Interactions, and Opportunities
+- **Template System**: Pre-built templates with Templater integration and auto-move functionality
+- **Template Management**: Easy creation and management of CRM templates through settings
+- **Modular Architecture**: Templates organized in separate files for better maintainability and extensibility
+- **Clean Template Loading**: File-based template loading with caching and fallback support
 
 ### Technical Details
 - Built with TypeScript and React

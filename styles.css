@@ -196,3 +196,191 @@ If your plugin does not need CSS, delete this file.
 .file-info strong {
 	color: var(--text-normal);
 }
+
+/* CRM Code Block Processor Styles */
+.crm-view-container {
+	margin: 16px 0;
+	padding: 16px;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.crm-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.crm-loading::before {
+	content: "⏳";
+	margin-right: 8px;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.crm-error {
+	padding: 12px;
+	background-color: #ffebee;
+	border: 1px solid #ffcdd2;
+	border-radius: 4px;
+	color: #d32f2f;
+	font-weight: 500;
+}
+
+.crm-result {
+	padding: 12px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.crm-query-result {
+	padding: 12px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.crm-component-placeholder {
+	padding: 20px;
+	text-align: center;
+	color: var(--text-muted);
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+	border: 2px dashed var(--background-modifier-border);
+}
+
+.crm-results-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 8px;
+}
+
+.crm-results-table th,
+.crm-results-table td {
+	padding: 8px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.crm-results-table th {
+	background-color: var(--background-secondary);
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.crm-results-table td {
+	color: var(--text-normal);
+}
+
+.crm-results-table tr:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.crm-no-results {
+	text-align: center;
+	padding: 20px;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.crm-null-result {
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.crm-object-result {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 12px;
+	overflow-x: auto;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+	white-space: pre-wrap;
+}
+
+/* JSX Component Styles */
+.crm-jsx-container {
+	padding: 12px;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.crm-jsx-placeholder {
+	background-color: var(--background-secondary);
+	border: 2px dashed var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 16px;
+}
+
+.crm-jsx-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.crm-jsx-badge {
+	background-color: #007acc;
+	color: white;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.crm-jsx-code {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 12px;
+	margin: 12px 0;
+	overflow-x: auto;
+}
+
+.crm-jsx-code pre {
+	margin: 0;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.crm-jsx-code code {
+	background: none;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+}
+
+.crm-jsx-note {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-style: italic;
+	background-color: var(--background-primary);
+	padding: 8px 12px;
+	border-radius: 4px;
+	border-left: 3px solid #007acc;
+}
+
+.crm-jsx-error {
+	font-size: 12px;
+	color: #d32f2f;
+	background-color: #ffebee;
+	padding: 8px 12px;
+	border-radius: 4px;
+	border: 1px solid #ffcdd2;
+	margin: 8px 0;
+	font-weight: 500;
+}
