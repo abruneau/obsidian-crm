@@ -1,6 +1,6 @@
 import { MarkdownPage } from "@blacksmithgu/datacore";
 import moment from "moment";
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { ListView } from "src/component/ui/List";
 import { ObsidianLink } from "src/component/markdown";
 import { OrgChartComponent } from "src/component/ui/OrgChartComponent";
@@ -173,9 +173,8 @@ function Competition({ meetings }: { meetings: MarkdownPage[] }) {
 	return content;
 }
 
-function Contacts({ current, isBU }: { current: MarkdownPage; isBU: boolean }) {
-	let content = <div>No contacts found.</div>;
-
+// Memoized Contacts component to prevent unnecessary re-renders
+const Contacts = memo(function Contacts({ current, isBU }: { current: MarkdownPage; isBU: boolean }) {
 	const contacts = useMemo(() => {
 		let ctcs: MarkdownPage[] = [];
 		if (isBU) {
@@ -194,26 +193,30 @@ function Contacts({ current, isBU }: { current: MarkdownPage; isBU: boolean }) {
 		}
 		return ctcs
 			.map((c) => {
-				c.meeting_number = datacore.query(
+				// Add meeting count as a property for table display
+				(c as any).meeting_number = datacore.query(
 					`@page and #meeting and linksto(${c.$link})`
 				).length;
 				return c;
 			})
 			.sort((a, b) => a.$name.localeCompare(b.$name));
 	}, [current, isBU]);
-	if (contacts.length) {
-		const COLUMNS = [
-			{ id: "Name", value: (row: MarkdownPage) => row.$link },
-			{ id: "Role", value: (row: MarkdownPage) => row.value("role") },
-			{ id: "Team", value: (row: MarkdownPage) => row.value("team") },
-			{ id: "Email", value: (row: MarkdownPage) => row.value("email") },
-			{ id: "Meetings", value: (row: MarkdownPage) => row.meeting_number },
-		];
-		content = <TableView paging={20} columns={COLUMNS} rows={contacts} />;
+
+	// Memoize columns to prevent recreation on every render
+	const columns = useMemo(() => [
+		{ id: "Name", value: (row: MarkdownPage) => row.$link },
+		{ id: "Role", value: (row: MarkdownPage) => row.value("role") },
+		{ id: "Team", value: (row: MarkdownPage) => row.value("team") },
+		{ id: "Email", value: (row: MarkdownPage) => row.value("email") },
+		{ id: "Meetings", value: (row: MarkdownPage) => (row as any).meeting_number },
+	], []);
+
+	if (contacts.length === 0) {
+		return <div>No contacts found.</div>;
 	}
 
-	return content;
-}
+	return <TableView paging={20} columns={columns} rows={contacts} />;
+});
 
 function OrgChart({ current }: { current: MarkdownPage }) {
 	let content = <div>No org chart found.</div>;
@@ -371,7 +374,8 @@ function Tasks({ current }: { current: MarkdownPage }) {
 	return <TaskListComponent link={current.$link} />;
 }
 
-export function CompanyRenderer({
+// Memoized CompanyRenderer to prevent unnecessary re-renders
+export const CompanyRenderer = memo(function CompanyRenderer({
 	currentPage,
 }: {
 	currentPage: MarkdownPage;
@@ -388,58 +392,60 @@ export function CompanyRenderer({
 			) as MarkdownPage[];
 	}, [currentPage]);
 
-	const isBU = currentPage.$tags.includes("#BU");
-	const isPartner = currentPage.$tags.includes("#company/partner");
+	const isBU = useMemo(() => currentPage.$tags.includes("#BU"), [currentPage.$tags]);
+	const isPartner = useMemo(() => currentPage.$tags.includes("#company/partner"), [currentPage.$tags]);
 
-	let tabs: Array<{ title: string; component: any; props: any }> = [];
-	if (isPartner) {
-		tabs = [
-			{
-				title: "Meetings",
-				component: ListMeetings,
-				props: { meetings },
-			},
-			{
-				title: "Contacts",
-				component: Contacts,
-				props: { current: currentPage, isBU },
-			},
-		];
-	} else {
-		tabs = [
-			{
-				title: "Meetings",
-				component: ListMeetings,
-				props: { meetings },
-			},
-			{ title: "Oppy", component: Povs, props: { current: currentPage } },
-			{
-				title: "Ecosystem",
-				component: Ecosystem,
-				props: { meetings },
-			},
-			{
-				title: "Competition",
-				component: Competition,
-				props: { meetings },
-			},
-			{
-				title: "Contacts",
-				component: Contacts,
-				props: { current: currentPage, isBU },
-			},
-			{
-				title: "Org Chart",
-				component: OrgChart,
-				props: { current: currentPage },
-			},
-			{
-				title: "Account Structure",
-				component: AccountOrg,
-				props: { current: currentPage },
-			},
-		];
-	}
+	// Memoize tabs to prevent recreation on every render
+	const tabs = useMemo(() => {
+		if (isPartner) {
+			return [
+				{
+					title: "Meetings",
+					component: ListMeetings,
+					props: { meetings },
+				},
+				{
+					title: "Contacts",
+					component: Contacts,
+					props: { current: currentPage, isBU },
+				},
+			];
+		} else {
+			return [
+				{
+					title: "Meetings",
+					component: ListMeetings,
+					props: { meetings },
+				},
+				{ title: "Oppy", component: Povs, props: { current: currentPage } },
+				{
+					title: "Ecosystem",
+					component: Ecosystem,
+					props: { meetings },
+				},
+				{
+					title: "Competition",
+					component: Competition,
+					props: { meetings },
+				},
+				{
+					title: "Contacts",
+					component: Contacts,
+					props: { current: currentPage, isBU },
+				},
+				{
+					title: "Org Chart",
+					component: OrgChart,
+					props: { current: currentPage },
+				},
+				{
+					title: "Account Structure",
+					component: AccountOrg,
+					props: { current: currentPage },
+				},
+			];
+		}
+	}, [isPartner, meetings, currentPage, isBU]);
 
 	return (
 		<div>
@@ -454,4 +460,4 @@ export function CompanyRenderer({
 			<TabComponent tabs={tabs} />
 		</div>
 	);
-}
+});

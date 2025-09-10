@@ -1,7 +1,8 @@
 import type { MarkdownPage } from "@blacksmithgu/datacore";
-import { useState, useRef, useEffect } from "react";
-import { useApp } from "src/lib/AppContext";
+import { useState, useRef, useEffect, useCallback, useMemo, memo } from "react";
+import { useAppAndPlugin } from "src/lib/AppContext";
 import { TFile, MarkdownRenderer } from "obsidian";
+import { filterPastMeetings } from "src/utils/meetingUtils";
 
 interface MeetingSummaryProps {
 	meetings: MarkdownPage[];
@@ -14,12 +15,18 @@ interface MeetingSummaryProps {
  * Supports both local Ollama instances and cloud-based APIs.
  * Renders the summary as markdown with proper formatting.
  */
-function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
-	const { app, plugin } = useApp();
+// Memoized component to prevent unnecessary re-renders
+const MeetingSummaryComponent = memo(function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
+	const { app, plugin } = useAppAndPlugin();
 	const [isLoading, setIsLoading] = useState(false);
 	const [summary, setSummary] = useState("");
 	const [error, setError] = useState("");
 	const summaryRef = useRef<HTMLDivElement>(null);
+
+	// Memoize filtered meetings to prevent recalculation
+	const filteredMeetings = useMemo(() => {
+		return filterPastMeetings(meetings, 10);
+	}, [meetings]);
 
 	// Render markdown when summary changes
 	useEffect(() => {
@@ -29,7 +36,8 @@ function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
 		}
 	}, [summary, app, plugin]);
 
-	const fetchMeetingSummary = async () => {
+	// Memoize the fetch function to prevent recreation on every render
+	const fetchMeetingSummary = useCallback(async () => {
 		setIsLoading(true);
 		setError("");
 		setSummary("");
@@ -37,22 +45,14 @@ function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
 		const settings = plugin.settings
 
 		try {
-			meetings = meetings
-				.filter(
-					(m) =>
-						m.value("start_date") &&
-						new Date(m.value("start_date")) <= new Date()
-				)
-				.slice(0, 10);
-
-			if (meetings.length === 0) {
+			if (filteredMeetings.length === 0) {
 				setError("No meetings found for this page.");
 				setIsLoading(false);
 				return;
 			}
 
 			// Prepare the content to send to Ollama
-			const meetingContentPromises = meetings.map(async (meeting) => {
+			const meetingContentPromises = filteredMeetings.map(async (meeting) => {
 				const date = meeting.$name.substring(0, 10);
 
 				const file = app.vault.getAbstractFileByPath(meeting.$path);
@@ -100,36 +100,42 @@ function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [filteredMeetings, app, plugin]);
+
+	// Memoize meeting list to prevent recalculation
+	const meetingList = useMemo(() => {
+		if (!filteredMeetings || filteredMeetings.length === 0) return null;
+		
+		return (
+			<div style={{ marginBottom: "16px" }}>
+				<h4 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600", color: "#333" }}>
+					Meetings to be summarized ({filteredMeetings.length}):
+				</h4>
+				<ul style={{ 
+					margin: "0", 
+					paddingLeft: "20px", 
+					fontSize: "13px",
+					color: "#666",
+					maxHeight: "200px",
+					overflowY: "auto"
+				}}>
+					{filteredMeetings.map((meeting, index) => {
+						const date = meeting.$name.substring(0, 10);
+						const title = meeting.value("title") || meeting.$name.replace(/^\d{4}-\d{2}-\d{2}-/, "");
+						return (
+							<li key={index} style={{ marginBottom: "4px" }}>
+								<strong>{title}</strong> - {date}
+							</li>
+						);
+					})}
+				</ul>
+			</div>
+		);
+	}, [filteredMeetings]);
 
 	return (
 		<div style={{ margin: "1em 0" }}>
-			{meetings && meetings.length > 0 && (
-				<div style={{ marginBottom: "16px" }}>
-					<h4 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600", color: "#333" }}>
-						Meetings to be summarized ({meetings.length}):
-					</h4>
-					<ul style={{ 
-						margin: "0", 
-						paddingLeft: "20px", 
-						fontSize: "13px",
-						color: "#666",
-						maxHeight: "200px",
-						overflowY: "auto"
-					}}>
-						{meetings
-							.map((meeting, index) => {
-								const date = meeting.$name.substring(0, 10);
-								const title = meeting.value("title") || meeting.$name.replace(/^\d{4}-\d{2}-\d{2}-/, "");
-								return (
-									<li key={index} style={{ marginBottom: "4px" }}>
-										<strong>{title}</strong> - {date}
-									</li>
-								);
-							})}
-					</ul>
-				</div>
-			)}
+			{meetingList}
 			
 			<button
 				onClick={fetchMeetingSummary}
@@ -184,6 +190,6 @@ function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
 			)}
 		</div>
 	);
-}
+});
 
 export default MeetingSummaryComponent;

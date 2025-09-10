@@ -16,6 +16,11 @@ export interface ObsidianCRMSettings {
 	defaultDateTimeFormat: string;
 	/** Markdown text for how to render null values in tables or similar. */
 	renderNullAs: string;
+	
+	/** Default page size for paginated views */
+	defaultPageSize: number;
+	/** Whether to scroll to top when page changes */
+	scrollOnPageChange: boolean;
 }
 
 export const VIEW_TYPE_MEETING_SUMMARY = "meeting-summary-view";
@@ -29,6 +34,8 @@ export const DEFAULT_SETTINGS: ObsidianCRMSettings = {
 	defaultDateFormat: "yyyy-MM-dd",
 	defaultDateTimeFormat: "yyyy-MM-dd HH:mm",
 	renderNullAs: "-",
+	defaultPageSize: 20,
+	scrollOnPageChange: true,
 };
 
 export const CSS_CLASSES = {

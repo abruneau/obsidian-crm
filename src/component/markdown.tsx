@@ -4,12 +4,13 @@
 import { App, MarkdownRenderer } from "obsidian";
 import { Component } from "obsidian";
 import { Link, Literal, Literals } from "@blacksmithgu/datacore";
-import { ObsidianCRMSettings } from "constants";
+import { ObsidianCRMSettings } from "../../constants";
 
 import { createContext, CSSProperties, useContext, useEffect, useRef } from "react";
 import { PropsWithChildren, memo } from "react";
 import { createRoot } from "react-dom/client";
 import { Embed } from "src/component/embed";
+import { ErrorComponent } from "src/component/ui/ErrorComponent";
 
 export const COMPONENT_CONTEXT = createContext<Component>(undefined!);
 export const APP_CONTEXT = createContext<App>(undefined!);
@@ -71,7 +72,7 @@ function RawMarkdown({
 	inline?: boolean;
 	style?: CSSProperties;
 	cls?: string;
-	onClick?: (event: MouseEvent) => void;
+	onClick?: (event: React.MouseEvent<HTMLSpanElement>) => void;
 }) {
 	const container = useRef<HTMLElement | null>(null);
 	const component = useContext(COMPONENT_CONTEXT);
@@ -348,37 +349,12 @@ export function ErrorMessage({
 	reset?: () => void;
 }) {
 	return (
-		<div className="datacore-error-box">
-			{title && <h4 className="datacore-error-title">{title}</h4>}
-			{message && <p className="datacore-error-message">{message}</p>}
-			{error && <pre className="datacore-error-pre">{error}</pre>}
-			{reset && (
-				<button className="datacore-error-retry" onClick={reset}>
-					Rerun
-				</button>
-			)}
-		</div>
+		<ErrorComponent
+			title={title}
+			message={message}
+			error={error}
+			reset={reset}
+		/>
 	);
 }
 
-// /** simple error boundary which renders a message on failure. */
-// export function SimpleErrorBoundary({
-// 	title,
-// 	message,
-// 	children,
-// }: PropsWithChildren<{ title?: string; message?: string }>) {
-// 	const [error, reset] = useErrorBoundary();
-
-// 	if (error) {
-// 		return (
-// 			<ErrorMessage
-// 				title={title}
-// 				message={message}
-// 				error={error.stack}
-// 				reset={reset}
-// 			/>
-// 		);
-// 	} else {
-// 		return <>{children}</>;
-// 	}
-// }

@@ -1,7 +1,7 @@
 import type {
   ElementType,
 } from "react";
-import { useState } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 
 
 interface Tab {
@@ -14,22 +14,24 @@ interface TabComponentProps {
   tabs: Tab[];
 }
 
-export function TabComponent({ tabs }: TabComponentProps) {
+// Memoized TabComponent to prevent unnecessary re-renders
+export const TabComponent = memo(function TabComponent({ tabs }: TabComponentProps) {
   const [activeTab, setActiveTab] = useState(0);
 
-  const handleTabClick = (index: number) => {
+  const handleTabClick = useCallback((index: number) => {
     setActiveTab(index);
-  };
+  }, []);
 
-  const handleKeyDown = (e: any, index: number) => {
+  const handleKeyDown = useCallback((e: any, index: number) => {
     // 32 is the key code for Space, 13 for Enter
     if (e.key === ' ' || e.key === 'Enter' || e.keyCode === 32 || e.keyCode === 13) {
       e.preventDefault();
       handleTabClick(index);
     }
-  };
+  }, [handleTabClick]);
 
-  const styles = {
+  // Memoize styles to prevent recreation on every render
+  const styles = useMemo(() => ({
     tabsContainer: {
       fontFamily: 'var(--font-interface, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji")',
       width: '100%',
@@ -64,7 +66,7 @@ export function TabComponent({ tabs }: TabComponentProps) {
     tabPanel: {
       // The display property is handled dynamically
     },
-  };
+  }), []);
 
   return (
     <div style={styles.tabsContainer}>
@@ -116,4 +118,4 @@ export function TabComponent({ tabs }: TabComponentProps) {
       </div>
     </div>
   );
-}
+});

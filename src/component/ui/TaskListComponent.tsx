@@ -1,9 +1,9 @@
 import { Link, MarkdownTaskItem } from "@blacksmithgu/datacore";
 import { DatacoreService } from "src/lib/DatacoreService";
 import { TaskService } from "src/lib/TaskService";
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { MarkdownRenderer } from "obsidian";
-import { useApp } from "src/lib/AppContext";
+import { useAppAndPlugin } from "src/lib/AppContext";
 
 interface TaskListProps {
 	link: Link;
@@ -16,9 +16,10 @@ interface TaskListProps {
  * Tasks are rendered as markdown with interactive checkboxes that
  * can be toggled to update the task status in the original file.
  */
-export function TaskListComponent({ link }: TaskListProps) {
+// Memoized task update handler to prevent recreation on every render
+const TaskListComponent = memo(function TaskListComponent({ link }: TaskListProps) {
 	const tasksRef = useRef<HTMLDivElement>(null);
-	const { app, plugin } = useApp();
+	const { app, plugin } = useAppAndPlugin();
 	const tasks = DatacoreService.queryTasks(link);
 	
 	// Memoize the task processing to avoid hook order issues
@@ -87,6 +88,11 @@ export function TaskListComponent({ link }: TaskListProps) {
 		return { taskList, flatTaskList };
 	}, [tasks]);
 
+	// Memoized task update handler to prevent recreation on every render
+	const handleTaskUpdate = useCallback(async (taskToUpdate: MarkdownTaskItem, isCompleted: boolean) => {
+		await TaskService.updateTaskStatus(taskToUpdate, isCompleted, app);
+	}, [app]);
+
 	useEffect(() => {
 		if (tasksRef.current && taskList) {
 			tasksRef.current.empty();
@@ -104,18 +110,28 @@ export function TaskListComponent({ link }: TaskListProps) {
 				
 				// Add event listeners to handle task updates
 				const checkboxes = tasksRef.current.querySelectorAll('input[type="checkbox"]');
+				const cleanupFunctions: (() => void)[] = [];
+				
 				checkboxes.forEach((checkbox, index) => {
-					checkbox.addEventListener('change', async (event) => {
-						const target = event.target as HTMLInputElement;
-						const taskToUpdate = flatTaskList[index];
-						if (taskToUpdate) {
-							await TaskService.updateTaskStatus(taskToUpdate, target.checked, app);
-						}
-					});
+					const taskToUpdate = flatTaskList[index];
+					if (taskToUpdate) {
+						const handleChange = async (event: Event) => {
+							const target = event.target as HTMLInputElement;
+							await handleTaskUpdate(taskToUpdate, target.checked);
+						};
+						
+						checkbox.addEventListener('change', handleChange);
+						cleanupFunctions.push(() => checkbox.removeEventListener('change', handleChange));
+					}
 				});
+				
+				// Return cleanup function
+				return () => {
+					cleanupFunctions.forEach(cleanup => cleanup());
+				};
 			});
 		}
-	}, [taskList, app, plugin]);
+	}, [taskList, app, plugin, flatTaskList, handleTaskUpdate]);
 
 
 
@@ -131,4 +147,6 @@ export function TaskListComponent({ link }: TaskListProps) {
 			)}
 		</div>
 	);
-}
+});
+
+export { TaskListComponent };

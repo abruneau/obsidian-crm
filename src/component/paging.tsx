@@ -263,15 +263,18 @@ export function useDatacorePaging({
 	// Handle auto-scroll if a container is provided.
 	const setPage = useCallback(
 		(newPage: number) => {
+			rawSetPage(newPage);
+			
+			// Defer scroll operation to avoid forced reflow
 			if (page != newPage && container && shouldScroll) {
-				container.current?.scrollIntoView({
-					behavior: "smooth",
-					block: "start",
-					inline: "nearest",
+				requestAnimationFrame(() => {
+					container.current?.scrollIntoView({
+						behavior: "smooth",
+						block: "start",
+						inline: "nearest",
+					});
 				});
 			}
-
-			rawSetPage(newPage);
 		},
 		[page, container, shouldScroll, rawSetPage]
 	);
