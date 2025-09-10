@@ -394,20 +394,20 @@ export function OrgChartComponent({
 					);
 
 					// Modify SVG to add width and height attributes
-					const modifiedSvg = renderedSvg.replace(
-						/<svg([^>]*)>/,
-						'<svg$1 width="100%" height="100%">'
-					);
+					// const modifiedSvg = renderedSvg.replace(
+					// 	/<svg([^>]*)>/,
+					// 	'<svg$1 width="100%" height="100%">'
+					// );
 
 					// Only update if the SVG has actually changed
 					setSvg((prevSvg) => {
-						if (prevSvg === modifiedSvg) {
+						if (prevSvg === renderedSvg) {
 							console.log(
 								"OrgChart: SVG unchanged, skipping update"
 							);
 							return prevSvg;
 						}
-						return modifiedSvg;
+						return renderedSvg;
 					});
 
 					// Update performance metrics
@@ -777,7 +777,13 @@ export function OrgChartComponent({
 				>
 					<div style={transformStyle}>
 						<div
-							style={{ width: "100%", height: "100%" }}
+							style={{ 
+								width: "100%", 
+								height: "100%",
+								display: "flex",
+								justifyContent: "center",
+								alignItems: "center"
+							}}
 							dangerouslySetInnerHTML={{ __html: svg }}
 						/>
 					</div>
