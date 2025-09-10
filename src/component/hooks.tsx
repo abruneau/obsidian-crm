@@ -1,6 +1,8 @@
 import { Literal } from "@blacksmithgu/datacore";
-import { isValidElement, ReactNode, useContext, useMemo, useRef } from "react";
+import { isValidElement, ReactNode, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { CURRENT_FILE_CONTEXT, Lit } from "./markdown";
+
+const NO_OP_UPDATE = (x: unknown) => {};
 
 /**
  * "Interns" the incoming value, returning the oldest equal instance. This is a trick to improve React diffing
@@ -31,4 +33,28 @@ export function useAsElement(element: ReactNode | Literal): ReactNode {
             return <Lit sourcePath={sourcePath} inline={true} value={element as Literal} />;
         }
     }, [element]);
+}
+
+/** Use state that will default to an external controlled value if set; otherwise, will track an internal value.  */
+export function useControlledState<T>(
+    initialState: T,
+    override?: T,
+    update?: (value: T) => void
+): [T, (value: T) => void] {
+    const [state, setState] = useState(override ?? initialState);
+    if (override !== undefined) {
+        if (state != override) setState(override);
+
+        return [override, update ?? NO_OP_UPDATE];
+    }
+
+    const setStateWithUpdate = useCallback(
+        (value: T) => {
+            setState(value);
+            if (update) update(value);
+        },
+        [setState, update]
+    );
+
+    return [state, setStateWithUpdate];
 }

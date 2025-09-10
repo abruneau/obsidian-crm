@@ -1,4 +1,5 @@
 import { MarkdownPage } from "@blacksmithgu/datacore";
+import { Callout } from "src/component/ui/callout";
 import moment from "moment";
 import { useMemo, memo } from "react";
 import { ListView } from "src/component/ui/List";
@@ -453,7 +454,10 @@ export const CompanyRenderer = memo(function CompanyRenderer({
 				<>
 					{/* <Links current={currentPage} /> */}
 					<AccountTeam meetings={meetings} />
-					<Tasks current={currentPage} />
+					<Callout title="Tasks" open={true}>
+						<Tasks current={currentPage} />
+					</Callout>
+					{/* <Tasks current={currentPage} /> */}
 					{/* <MeetingSummaryComponent meetings={meetings} /> */}
 				</>
 			)}

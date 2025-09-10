@@ -139,7 +139,6 @@ const TaskListComponent = memo(function TaskListComponent({ link }: TaskListProp
 
 	return (
 		<div className="task-list-container">
-			<h3>Tasks</h3>
 			{tasks.length === 0 ? (
 				<div>No tasks found for this meeting.</div>
 			) : (
