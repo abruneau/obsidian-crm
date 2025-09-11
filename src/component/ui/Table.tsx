@@ -104,9 +104,9 @@ export function TableView<T>(props: TableViewProps<T>) {
 
     return (
         <div ref={tableRef}>
-            <table className="crm-table">
+            <table className="datacore-table">
                 <thead>
-                    <tr className="crm-table-header-row">
+                    <tr className="datacore-table-header-row">
                         {columns.map((col) => (
                             <TableViewHeaderCell key={col.id} column={col} />
                         ))}
@@ -147,8 +147,8 @@ export function TableViewHeaderCell<T>({ column }: { column: TableColumn<T> }) {
 
     // We use an internal div to avoid flex messing with the table layout.
     return (
-        <th style={{ width: realWidth }} className="crm-table-header-cell">
-            <div className="crm-table-header-title">{header}</div>
+        <th style={{ width: realWidth }} className="datacore-table-header-cell">
+            <div className="datacore-table-header-title">{header}</div>
         </th>
     );
 }
@@ -212,7 +212,7 @@ export function TableGroupHeader<T>({
     const renderable = useAsElement(rawRenderable);
 
     return (
-        <tr className="crm-table-group-header">
+        <tr className="datacore-table-group-header">
             <td colSpan={width}>{renderable}</td>
         </tr>
     );
@@ -224,7 +224,7 @@ export function TableGroupHeader<T>({
  */
 export function TableRow<T>({ level, row, columns }: { level: number; row: T; columns: TableColumn<T>[] }) {
     return (
-        <tr className="crm-table-row" style={level ? { paddingLeft: level * 5 } : undefined}>
+        <tr className="datacore-table-row" style={level ? { paddingLeft: level * 5 } : undefined}>
             {columns.map((col) => (
                 <TableRowCell key={col.id} row={row} column={col} />
             ))}
@@ -244,5 +244,5 @@ export function TableRowCell<T>({ row, column }: { row: T; column: TableColumn<T
     }, [row, column.render, value]);
     const rendered = useAsElement(renderable);
 
-    return <td className="crm-table-cell">{rendered}</td>;
+    return <td className="datacore-table-cell">{rendered}</td>;
 }

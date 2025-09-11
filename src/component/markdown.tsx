@@ -18,7 +18,7 @@ export const SETTINGS_CONTEXT = createContext<ObsidianCRMSettings>(undefined!);
 export const CURRENT_FILE_CONTEXT = createContext<string>("");
 
 /**
- * More compact provider for all of the datacore react contexts.
+ * More compact provider for all of the crm react contexts.
  * @hidden
  */
 export function CRMContextProvider({
