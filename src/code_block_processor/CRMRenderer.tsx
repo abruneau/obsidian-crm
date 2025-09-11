@@ -12,6 +12,7 @@ import { CompanyRenderer } from "./CompanyRenderer";
 import { AppContext } from "src/lib/AppContext";
 import ObsidianCRMPlugin from "../../main";
 import { CRMContextProvider } from "src/component/markdown";
+import { ContactRenderer } from "./ContactRendere";
 
 export class CRMRenderer extends MarkdownRenderChild {
 	private activeFile: TFile | null = null;
@@ -65,7 +66,7 @@ export class CRMRenderer extends MarkdownRenderChild {
 				content = <ReactView />;
 				break;
 			case "contacts":
-				content = <ReactView />;
+				content = <ContactRenderer currentPage={page} />;
 				break;
 			case "company":
 				content = <CompanyRenderer currentPage={page} />;

@@ -15,13 +15,7 @@ Linkedin::
 Manager::
 Location::
 
-\`\`\`datacoretsx
-const { ContactInfo } = await dc.require("Settings/Scripts/Datacore/contact.tsx");
-
-return function View() {
-
-	return <ContactInfo />;
-}
+\`\`\`crm
 \`\`\`
 
 <% await tp.file.move("/CRM/Contacts/" + tp.file.title) %>

@@ -414,7 +414,7 @@ export const CompanyRenderer = memo(function CompanyRenderer({
 		} else {
 			return [
 				{
-					title: "Meetings",
+					title: `Meetings (${meetings.length})`,
 					component: ListMeetings,
 					props: { meetings },
 				},
