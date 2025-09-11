@@ -41,6 +41,7 @@
 		"@blacksmithgu/datacore": "^0.1.24",
 		"mermaid": "^11.11.0",
 		"react": "^19.1.1",
-		"react-dom": "^19.1.1"
+		"react-dom": "^19.1.1",
+		"react-zoom-pan-pinch": "^3.7.0"
 	}
 }

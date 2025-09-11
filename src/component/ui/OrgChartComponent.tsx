@@ -1,6 +1,7 @@
 import { MarkdownPage } from "@blacksmithgu/datacore";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import mermaid from "mermaid";
+import SVGComponent from "./SVGComponent";
 
 /**
  * Performance monitoring utilities
@@ -88,13 +89,7 @@ type Dependency = {
 	parent: GraphNode;
 };
 
-type Transform = {
-	scale: number;
-	x: number;
-	y: number;
-};
-
-type PerformanceMetrics = {
+export type PerformanceMetrics = {
 	mermaidGeneration: number;
 	svgRendering: number;
 	domUpdate: number;
@@ -231,7 +226,6 @@ class OrgChart {
 	}
 }
 
-// Note: useDebounce utility removed as it was causing infinite loops
 
 /**
  * Enhanced OrgChartComponent with performance optimizations
@@ -248,26 +242,12 @@ export function OrgChartComponent({
 	const [mermaidCode, setMermaidCode] = useState("");
 	const [svg, setSvg] = useState("");
 	const [error, setError] = useState("");
-	const [transform, setTransform] = useState<Transform>({
-		scale: 1,
-		x: 0,
-		y: 0,
-	});
-	const [isPanning, setIsPanning] = useState(false);
-	const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 	const [performanceMetrics, setPerformanceMetrics] =
 		useState<PerformanceMetrics | null>(null);
-	const [isRendering, setIsRendering] = useState(false);
+	const [isRendering, setIsRendering] = useState(true);
 
-	const viewerRef = useRef<HTMLDivElement>(null);
-	const transformRef = useRef(transform);
 	const performanceMonitor = useRef(PerformanceMonitor.getInstance());
 	const orgChartRef = useRef<OrgChart | null>(null);
-
-	// Keep transformRef in sync with transform state
-	useEffect(() => {
-		transformRef.current = transform;
-	}, [transform]);
 
 	// Memoize dependencies to prevent unnecessary re-renders
 	const dependenciesKey = useMemo(() => {
@@ -308,6 +288,7 @@ export function OrgChartComponent({
 					setError("No org chart data found for this contact.");
 					setMermaidCode("");
 					setSvg("");
+					setIsRendering(false);
 				} else {
 					const code = orgChartRef.current?.toMermaid() || "";
 					const mermaidTime =
@@ -337,12 +318,12 @@ export function OrgChartComponent({
 									orgChartRef.current?.getNodeCount() || 0,
 							} as PerformanceMetrics)
 					);
+					// Keep isRendering true - it will be set to false after SVG rendering
 				}
 			} catch (e) {
 				setError("Error loading org chart: " + (e?.message || e));
 				setMermaidCode("");
 				setSvg("");
-			} finally {
 				setIsRendering(false);
 			}
 		};
@@ -356,12 +337,12 @@ export function OrgChartComponent({
 
 	// Render SVG when Mermaid code changes
 	useEffect(() => {
-
 		let cancelled = false;
 
 		const renderSvg = async () => {
 			if (!mermaidCode) {
 				setSvg("");
+				setIsRendering(false);
 				return;
 			}
 
@@ -391,6 +372,7 @@ export function OrgChartComponent({
 							);
 							return prevSvg;
 						}
+
 						return renderedSvg;
 					});
 
@@ -402,8 +384,12 @@ export function OrgChartComponent({
 								svgRendering: svgTime,
 							} as PerformanceMetrics)
 					);
+					
+					// Set rendering to false after successful render
+					setIsRendering(false);
 				} else {
 					console.log("OrgChart: SVG rendering was cancelled");
+					setIsRendering(false);
 				}
 			} catch (e) {
 				console.error("OrgChart: Error rendering SVG:", e);
@@ -417,9 +403,8 @@ export function OrgChartComponent({
 					setError(
 						`Error rendering SVG: ${errorMessage}\n\nMermaid code:\n${mermaidCode}`
 					);
+					setIsRendering(false);
 				}
-			} finally {
-				if (!cancelled) setIsRendering(false);
 			}
 		};
 
@@ -430,152 +415,6 @@ export function OrgChartComponent({
 		};
 	}, [mermaidCode, id]);
 
-	// centerView function removed - no longer needed
-
-	// SVG is now automatically centered by flexbox - no complex centering logic needed
-
-	// Wheel event handling with performance optimization
-	useEffect(() => {
-		const viewer = viewerRef.current;
-		if (!viewer) return;
-
-		const handleWheel = (e: WheelEvent) => {
-			e.preventDefault();
-
-			const currentTransform = transformRef.current;
-			const scaleAmount = 1.1;
-			const newScale =
-				e.deltaY < 0
-					? currentTransform.scale * scaleAmount
-					: currentTransform.scale / scaleAmount;
-
-			// No scale limits - allow unlimited zoom
-
-			requestAnimationFrame(() => {
-				if (!viewerRef.current) return;
-
-				const viewer = viewerRef.current;
-				const rect = viewer.getBoundingClientRect();
-				const mouseX = e.clientX - rect.left;
-				const mouseY = e.clientY - rect.top;
-
-				const newX =
-					mouseX -
-					(mouseX - currentTransform.x) *
-						(newScale / currentTransform.scale);
-				const newY =
-					mouseY -
-					(mouseY - currentTransform.y) *
-						(newScale / currentTransform.scale);
-
-				setTransform({ scale: newScale, x: newX, y: newY });
-			});
-		};
-
-		viewer.addEventListener("wheel", handleWheel, { passive: false });
-		return () => viewer.removeEventListener("wheel", handleWheel);
-	}, [svg]);
-
-	// Mouse event handlers
-	const handleMouseDown = useCallback((e: React.MouseEvent) => {
-		if ((e.target as Element)?.closest("button")) return;
-		e.preventDefault();
-		setIsPanning(true);
-		const currentTransform = transformRef.current;
-		setPanStart({
-			x: e.clientX - currentTransform.x,
-			y: e.clientY - currentTransform.y,
-		});
-	}, []);
-
-	const handleMouseUp = useCallback(() => {
-		setIsPanning(false);
-	}, []);
-
-	const handleMouseMove = useCallback(
-		(e: React.MouseEvent) => {
-			if (!isPanning) return;
-			e.preventDefault();
-			const newX = e.clientX - panStart.x;
-			const newY = e.clientY - panStart.y;
-			setTransform((prev) => ({ ...prev, x: newX, y: newY }));
-		},
-		[isPanning, panStart]
-	);
-
-	const handleMouseLeave = useCallback(() => {
-		setIsPanning(false);
-	}, []);
-
-	// Action handlers
-	const resetZoom = useCallback(() => {
-		performanceMonitor.current.startCheckpoint("reset-zoom");
-		// Always reset to (0, 0) position for both small and large diagrams
-		setTransform({ scale: 1, x: 0, y: 0 });
-		performanceMonitor.current.endCheckpoint("reset-zoom");
-	}, []);
-
-	const downloadSvg = useCallback(() => {
-		if (!svg) return;
-
-		performanceMonitor.current.startCheckpoint("download-svg");
-		const blob = new Blob([svg], { type: "image/svg+xml" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `orgchart-${current.$name || "chart"}.svg`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-		performanceMonitor.current.endCheckpoint("download-svg");
-	}, [svg, current.$name]);
-
-	const downloadMermaidCode = useCallback(() => {
-		if (!mermaidCode) return;
-
-		performanceMonitor.current.startCheckpoint("download-mermaid");
-		const blob = new Blob([mermaidCode], { type: "text/plain" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `orgchart-${current.$name || "chart"}.mmd`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-		performanceMonitor.current.endCheckpoint("download-mermaid");
-	}, [mermaidCode, current.$name]);
-
-	const showPerformanceMetrics = useCallback(() => {
-		const metrics = performanceMonitor.current.getMetrics();
-		console.log("Performance Metrics:", metrics);
-		alert(`Performance Metrics:\n${JSON.stringify(metrics, null, 2)}`);
-	}, []);
-
-	// Memoized button styles
-	const buttonStyle = useMemo(
-		() => ({
-			padding: "8px 12px",
-			background: "var(--color-base-00, #fff)",
-			border: "1px solid var(--color-base-30, #ccc)",
-			borderRadius: 6,
-			boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-			cursor: "pointer",
-			display: "inline-flex",
-			alignItems: "center",
-			gap: "6px",
-			fontSize: "12px",
-			fontWeight: "500",
-			transition: "all 0.2s ease",
-			":hover": {
-				background: "var(--color-base-10, #f5f5f5)",
-				boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-			},
-		}),
-		[]
-	);
-
 	// Memoized container styles
 	const containerStyle = useMemo(
 		() => ({
@@ -583,29 +422,6 @@ export function OrgChartComponent({
 			position: "relative" as const,
 		}),
 		[]
-	);
-
-	const viewerStyle = useMemo(
-		() => ({
-			width: "100%",
-			height: "600px",
-			border: "1px solid var(--color-base-30, #ddd)",
-			overflow: "hidden",
-			position: "relative" as const,
-			background: "var(--color-base-10, #fafafa)",
-			cursor: isPanning ? "grabbing" : "grab",
-			borderRadius: "8px",
-		}),
-		[isPanning]
-	);
-
-	const transformStyle = useMemo(
-		() => ({
-			transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-			width: "100%",
-			height: "100%",
-		}),
-		[transform]
 	);
 
 	return (
@@ -646,172 +462,13 @@ export function OrgChartComponent({
 			)}
 
 			{svg && (
-				<div
-					ref={viewerRef}
-					style={viewerStyle}
-					onMouseDown={handleMouseDown}
-					onMouseUp={handleMouseUp}
-					onMouseMove={handleMouseMove}
-					onMouseLeave={handleMouseLeave}
-				>
-					<div style={transformStyle}>
-						<div
-							style={{ 
-								width: "100%", 
-								height: "100%",
-								display: "flex",
-								justifyContent: "center",
-								alignItems: "center"
-							}}
-							dangerouslySetInnerHTML={{ __html: svg }}
-						/>
-					</div>
-
-					{/* Action buttons */}
-					<div
-						style={{
-							position: "absolute",
-							top: "10px",
-							right: "10px",
-							zIndex: 10,
-							display: "flex",
-							gap: "8px",
-							flexWrap: "wrap",
-						}}
-					>
-						<button
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								resetZoom();
-							}}
-							style={buttonStyle}
-							title="Reset view"
-						>
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path d="M3 2v6h6" />
-								<path d="M21 12A9 9 0 0 0 6 5.3L3 8" />
-								<path d="M21 22v-6h-6" />
-								<path d="M3 12a9 9 0 0 0 15 6.7l3-2.7" />
-							</svg>
-							Reset
-						</button>
-
-						<button
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								downloadSvg();
-							}}
-							style={buttonStyle}
-							title="Download SVG"
-						>
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-								<path d="M14 2v4a2 2 0 0 0 2 2h4" />
-								<path d="M12 18v-6" />
-								<path d="m9 15 3 3 3-3" />
-							</svg>
-							SVG
-						</button>
-
-						<button
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								downloadMermaidCode();
-							}}
-							style={buttonStyle}
-							title="Download Mermaid code"
-						>
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-								<path d="M14 2v6h6" />
-								<path d="M16 13H8" />
-								<path d="M16 17H8" />
-								<path d="M10 9H8" />
-							</svg>
-							Code
-						</button>
-
-						<button
-							onClick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								showPerformanceMetrics();
-							}}
-							style={buttonStyle}
-							title="Show performance metrics"
-						>
-							<svg
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path d="M3 3v18h18" />
-								<path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-							</svg>
-							Perf
-						</button>
-					</div>
-
-					{/* Performance metrics display */}
-					{performanceMetrics && (
-						<div
-							style={{
-								position: "absolute",
-								bottom: "10px",
-								left: "10px",
-								background: "rgba(0,0,0,0.8)",
-								color: "white",
-								padding: "8px 12px",
-								borderRadius: "6px",
-								fontSize: "11px",
-								fontFamily: "monospace",
-								zIndex: 10,
-								maxWidth: "300px",
-							}}
-						>
-							<div>Nodes: {performanceMetrics.nodeCount}</div>
-							<div>
-								Mermaid:{" "}
-								{performanceMetrics.mermaidGeneration?.toFixed(
-									1
-								)}
-								ms
-							</div>
-							<div>
-								SVG:{" "}
-								{performanceMetrics.svgRendering?.toFixed(1)}ms
-							</div>
-							<div>Scale: {transform.scale.toFixed(2)}x</div>
-						</div>
-					)}
-				</div>
+				<SVGComponent
+					svg={svg}
+					code={mermaidCode}
+					name={current.$name}
+					codeExtension="mmd"
+					performanceMetrics={performanceMetrics}
+				/>
 			)}
 		</div>
 	);
