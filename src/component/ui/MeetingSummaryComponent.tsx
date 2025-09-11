@@ -1,6 +1,6 @@
 import type { MarkdownPage } from "@blacksmithgu/datacore";
-import { useState, useRef, useEffect, useCallback, useMemo, memo } from "react";
-import { useAppAndPlugin } from "src/lib/AppContext";
+import { useState, useRef, useEffect, useCallback, useMemo, memo, useContext } from "react";
+import { APP_CONTEXT, PLUGIN_CONTEXT } from "src/component/markdown";
 import { TFile, MarkdownRenderer } from "obsidian";
 import { filterPastMeetings } from "src/utils/meetingUtils";
 
@@ -17,7 +17,8 @@ interface MeetingSummaryProps {
  */
 // Memoized component to prevent unnecessary re-renders
 const MeetingSummaryComponent = memo(function MeetingSummaryComponent({ meetings}: MeetingSummaryProps) {
-	const { app, plugin } = useAppAndPlugin();
+	const app = useContext(APP_CONTEXT);
+	const plugin = useContext(PLUGIN_CONTEXT);
 	const [isLoading, setIsLoading] = useState(false);
 	const [summary, setSummary] = useState("");
 	const [error, setError] = useState("");

@@ -9,14 +9,13 @@ import {
 } from "obsidian";
 import { ContentManager } from "src/model/ContentManager";
 import { CompanyRenderer } from "./CompanyRenderer";
-import { AppContext } from "src/lib/AppContext";
 import ObsidianCRMPlugin from "../../main";
 import { CRMContextProvider } from "src/component/markdown";
 import { ContactRenderer } from "./ContactRendere";
 
 export class CRMRenderer extends MarkdownRenderChild {
 	private activeFile: TFile | null = null;
-	private setActiveFile: ((file: TFile | null) => void) | null = null;
+	private setActiveFile: ((file: TFile | null) => void) | undefined = undefined;
 	private root: Root;
 
 	constructor(
@@ -77,20 +76,14 @@ export class CRMRenderer extends MarkdownRenderChild {
 		}
 
 		this.root.render(
-			<AppContext.Provider value={{
-				app: this.thisPlugin.app,
-				plugin: this.thisPlugin,
-				activeFile: this.activeFile,
-				setActiveFile: this.setActiveFile,
-			}}>
-				<CRMContextProvider
-					app={this.thisPlugin.app}
-					component={this}
-					settings={this.thisPlugin.settings}
-				>
-					{content}
-				</CRMContextProvider>
-			</AppContext.Provider>
+			<CRMContextProvider
+				component={this}
+				plugin={this.thisPlugin}
+				activeFile={this.activeFile}
+				setActiveFile={this.setActiveFile}
+			>
+				{content}
+			</CRMContextProvider>
 		);
 	}
 }

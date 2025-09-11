@@ -1,9 +1,9 @@
 import { Link, MarkdownTaskItem } from "@blacksmithgu/datacore";
 import { DatacoreService } from "src/lib/DatacoreService";
 import { TaskService } from "src/lib/TaskService";
-import { useEffect, useRef, useMemo, useCallback, memo } from "react";
+import { useEffect, useRef, useMemo, useCallback, memo, useContext } from "react";
 import { MarkdownRenderer } from "obsidian";
-import { useAppAndPlugin } from "src/lib/AppContext";
+import { APP_CONTEXT, PLUGIN_CONTEXT } from "../markdown";
 
 interface TaskListProps {
 	link: Link;
@@ -19,7 +19,8 @@ interface TaskListProps {
 // Memoized task update handler to prevent recreation on every render
 const TaskListComponent = memo(function TaskListComponent({ link }: TaskListProps) {
 	const tasksRef = useRef<HTMLDivElement>(null);
-	const { app, plugin } = useAppAndPlugin();
+	const app = useContext(APP_CONTEXT);
+	const plugin = useContext(PLUGIN_CONTEXT);
 	const tasks = DatacoreService.queryTasks(link);
 	
 	// Memoize the task processing to avoid hook order issues

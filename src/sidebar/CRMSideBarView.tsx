@@ -2,8 +2,8 @@ import { IconName, ItemView, WorkspaceLeaf, TFile, MarkdownView } from "obsidian
 import { createRoot, Root } from "react-dom/client";
 import ObsidianCRMPlugin from "../../main";
 import React, { useState, useEffect } from "react";
-import { AppContext } from "../lib/AppContext";
 import { CRMComponent } from "../component/CRMComponent";
+import { CRMContextProvider } from "../component/markdown";
 
 export default class CRMSideBarView extends ItemView {
 	root: Root | null = null;
@@ -43,14 +43,14 @@ export default class CRMSideBarView extends ItemView {
 			}, []);
 
 			return (
-				<AppContext.Provider value={{
-					app: this.thisPlugin.app,
-					plugin: this.thisPlugin,
-					activeFile,
-					setActiveFile
-				}}>
+				<CRMContextProvider
+					component={this}
+					plugin={this.thisPlugin}
+					activeFile={activeFile}
+					setActiveFile={setActiveFile}
+				>
 					<CRMComponent/>
-				</AppContext.Provider>
+				</CRMContextProvider>
 			);
 		};
 

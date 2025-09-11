@@ -1,4 +1,4 @@
-import { useActiveFile } from "../lib/AppContext";
+import { useActiveFile } from "./markdown";
 import { DatacoreService } from "../lib/DatacoreService";
 import { ContentManager } from "../model";
 import { CompanyView } from "src/sidebar/CompanyView";

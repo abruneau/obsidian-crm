@@ -1,21 +1,52 @@
 /** Provides core preact / rendering utilities for all view types.
  * @module ui
  */
-import { App, MarkdownRenderer } from "obsidian";
+import { App, MarkdownRenderer, TFile } from "obsidian";
 import { Component } from "obsidian";
 import { Link, Literal, Literals } from "@blacksmithgu/datacore";
 import { ObsidianCRMSettings } from "../../constants";
 
-import { createContext, CSSProperties, useContext, useEffect, useRef } from "react";
+import {
+	createContext,
+	CSSProperties,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { PropsWithChildren, memo } from "react";
 import { createRoot } from "react-dom/client";
 import { Embed } from "src/component/embed";
 import { ErrorComponent } from "src/component/ui/ErrorComponent";
+import ObsidianCRMPlugin from "main";
 
 export const COMPONENT_CONTEXT = createContext<Component>(undefined!);
 export const APP_CONTEXT = createContext<App>(undefined!);
+export const PLUGIN_CONTEXT = createContext<ObsidianCRMPlugin>(undefined!);
 export const SETTINGS_CONTEXT = createContext<ObsidianCRMSettings>(undefined!);
 export const CURRENT_FILE_CONTEXT = createContext<string>("");
+
+// Consolidated context interface that includes all CRM functionality
+interface CRMContextType {
+	activeFile: TFile | null;
+	setActiveFile: (file: TFile | null) => void;
+}
+
+export const ACTIVE_FILE_CONTEXT = createContext<CRMContextType | undefined>(undefined);
+
+// Convenience hooks for accessing CRM context
+export function useCRM(): CRMContextType {
+	const context = useContext(ACTIVE_FILE_CONTEXT);
+	if (!context) {
+		throw new Error("CRM context is not available.");
+	}
+	return context;
+}
+
+export function useActiveFile(): TFile | null {
+	const { activeFile } = useCRM();
+	return activeFile;
+}
 
 /**
  * More compact provider for all of the crm react contexts.
@@ -23,32 +54,47 @@ export const CURRENT_FILE_CONTEXT = createContext<string>("");
  */
 export function CRMContextProvider({
 	children,
-	app,
 	component,
-	settings,
+	plugin,
+	activeFile,
+	setActiveFile,
 }: PropsWithChildren<{
-	app: App;
 	component: Component;
-	settings: ObsidianCRMSettings;
+	plugin: ObsidianCRMPlugin;
+	activeFile?: TFile | null;
+	setActiveFile?: (file: TFile | null) => void;
 }>) {
+	// Internal state for activeFile if not provided externally
+	const [internalActiveFile, setInternalActiveFile] = useState<TFile | null>(
+		null
+	);
+
+	const currentActiveFile =
+		activeFile !== undefined ? activeFile : internalActiveFile;
+	const currentSetActiveFile = setActiveFile || setInternalActiveFile;
+
 	return (
 		<COMPONENT_CONTEXT.Provider value={component}>
-			<APP_CONTEXT.Provider value={app}>
-				<SETTINGS_CONTEXT.Provider value={settings}>
-					{children}
-				</SETTINGS_CONTEXT.Provider>
+			<APP_CONTEXT.Provider value={plugin.app}>
+				<PLUGIN_CONTEXT.Provider value={plugin}>
+					<SETTINGS_CONTEXT.Provider value={plugin.settings}>
+						<ACTIVE_FILE_CONTEXT.Provider
+							value={{
+								activeFile: currentActiveFile,
+								setActiveFile: currentSetActiveFile,
+							}}
+						>
+							{children}
+						</ACTIVE_FILE_CONTEXT.Provider>
+					</SETTINGS_CONTEXT.Provider>
+				</PLUGIN_CONTEXT.Provider>
 			</APP_CONTEXT.Provider>
 		</COMPONENT_CONTEXT.Provider>
 	);
 }
 
 /** Renders an obsidian-looking link about 10x faster than using the markdown renderer. */
-function RawLink({
-	link,
-}: {
-	link: Link;
-}) {
-	
+function RawLink({ link }: { link: Link }) {
 	return (
 		<a className="internal-link" href={`${link.obsidianLink()}`}>
 			{link.displayOrDefault()}
@@ -76,8 +122,14 @@ function RawMarkdown({
 }) {
 	const container = useRef<HTMLElement | null>(null);
 	const component = useContext(COMPONENT_CONTEXT);
+	if (!component) {
+		throw new Error("Component context is not available.");
+	}
 	const defaultPath = useContext(CURRENT_FILE_CONTEXT);
 	const app = useContext(APP_CONTEXT);
+	if (!app) {
+		throw new Error("App context is not available.");
+	}
 
 	const sourcePath = maybeSourcePath ?? defaultPath;
 
@@ -87,7 +139,7 @@ function RawMarkdown({
 		// Use requestAnimationFrame to defer DOM manipulation and avoid forced reflow
 		requestAnimationFrame(() => {
 			if (!container.current) return;
-			
+
 			container.current.replaceChildren(...[]);
 
 			(async () => {
@@ -107,7 +159,7 @@ function RawMarkdown({
 				// Use requestAnimationFrame to defer DOM queries and avoid forced reflow
 				requestAnimationFrame(() => {
 					if (!container.current) return;
-					
+
 					let paragraph = container.current.querySelector("p");
 					while (paragraph) {
 						const children = paragraph.childNodes;
@@ -165,6 +217,9 @@ function RawLit({
 	depth?: number;
 }>) {
 	const settings = useContext(SETTINGS_CONTEXT);
+	if (!settings) {
+		throw new Error("Settings context is not available.");
+	}
 	// const app = useContext(APP_CONTEXT);
 	const defaultPath = useContext(CURRENT_FILE_CONTEXT);
 
@@ -189,19 +244,19 @@ function RawLit({
 		return <>{"" + value}</>;
 	} else if (Literals.isBoolean(value)) {
 		return <>{"" + value}</>;
-	// } else if (Literals.isDate(value)) {
-	// 	return (
-	// 		<>
-	// 			{renderMinimalDate(
-	// 				value,
-	// 				settings.defaultDateFormat,
-	// 				settings.defaultDateTimeFormat,
-	// 				currentLocale()
-	// 			)}
-	// 		</>
-	// 	);
-	// } else if (Literals.isDuration(value)) {
-	// 	return <>{renderMinimalDuration(value)}</>;
+		// } else if (Literals.isDate(value)) {
+		// 	return (
+		// 		<>
+		// 			{renderMinimalDate(
+		// 				value,
+		// 				settings.defaultDateFormat,
+		// 				settings.defaultDateTimeFormat,
+		// 				currentLocale()
+		// 			)}
+		// 		</>
+		// 	);
+		// } else if (Literals.isDuration(value)) {
+		// 	return <>{renderMinimalDuration(value)}</>;
 	} else if (Literals.isLink(value)) {
 		// // Special case handling of image/video/etc embeddings to bypass the Obsidian API not working.
 		// if (isImageEmbed(value)) {
@@ -252,7 +307,10 @@ function RawLit({
 			return (
 				<ul className={"dataview dataview-ul dataview-result-list-ul"}>
 					{value.map((subvalue, index) => (
-						<li key={`list-item-${index}`} className="dataview-result-list-li">
+						<li
+							key={`list-item-${index}`}
+							className="dataview-result-list-li"
+						>
 							<Lit
 								value={subvalue}
 								sourcePath={sourcePath}
@@ -282,7 +340,14 @@ function RawLit({
 				</span>
 			);
 		}
-	} else if (value && typeof value === 'object' && 'path' in value && 'display' in value && 'embed' in value && 'type' in value) {
+	} else if (
+		value &&
+		typeof value === "object" &&
+		"path" in value &&
+		"display" in value &&
+		"embed" in value &&
+		"type" in value
+	) {
 		// Manual check for Link objects since Literals.isLink might not work properly
 		return <ObsidianLink link={value as Link} />;
 	} else if (Literals.isObject(value)) {
@@ -295,7 +360,10 @@ function RawLit({
 			return (
 				<ul className="dataview dataview-ul dataview-result-object-ul">
 					{Object.entries(value).map(([key, value], index) => (
-						<li key={`object-item-${index}`} className="dataview dataview-li dataview-result-object-li">
+						<li
+							key={`object-item-${index}`}
+							className="dataview dataview-li dataview-result-object-li"
+						>
 							{key}:{" "}
 							<Lit
 								value={value}
@@ -357,4 +425,3 @@ export function ErrorMessage({
 		/>
 	);
 }
-
