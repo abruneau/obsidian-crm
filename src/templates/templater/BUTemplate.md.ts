@@ -12,8 +12,6 @@ mainOrg::
 Parent::
 Products::
 
-\`\`\`dataviewjs
-const {DvAccount2} = customJS
-DvAccount2.getAccountInfo({app, dv, context: this})
+\`\`\`crm
 \`\`\`
 `;
